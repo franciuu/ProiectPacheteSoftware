@@ -7,22 +7,18 @@ def show_dataset():
 
     st.markdown('<h1 class="main-title">Datasetul ales pentru compania Sephora</h1>', unsafe_allow_html=True)
     st.write("""
-        În această secțiune vom analiza performanțele companiei folosind seturi de date relevante.
-        Vom utiliza **Python** pentru vizualizări și **SAS** pentru modelarea statistică și prognoza expansiunii.
-
-        **Sursa datelor:** Acest set de date a fost preluat de pe Kaggle. Poți accesa datele originale aici:
+        **Sursa datelor:** Acest set de date a fost preluat de pe Kaggle. Datele originale se pot găsi aici:
         [Sephora Dataset pe Kaggle](https://www.kaggle.com/datasets/nadyinky/sephora-products-and-skincare-reviews/data)
 
         **Ce surprind datele?**
         Datele surprind informații detaliate despre produsele Sephora, recenziile utilizatorilor și preferințele acestora.
-        Vom analiza aspecte precum ratingurile produselor, disponibilitatea în stoc, popularitatea și impactul acestora pe piață.
-
+       
         **Ce vom realiza?**
         Cu ajutorul acestor date, vom implementa următoarele tipuri de analize:
         - Vizualizarea caracteristicilor produselor și recenziilor
         - Detectarea tendințelor pe baza evaluărilor utilizatorilor
         - Explorarea oportunităților de extindere pe noi piețe
-        - Prelucrări statistice și modele predictive folosind Python și SAS""")
+        - Prelucrări statistice și modele predictive folosind Python""")
 
     st.markdown("### 📊 Primele rânduri din fișierele dataset")
 
@@ -89,7 +85,7 @@ def show_dataset():
     product_data_copy = product_data.copy()
     reviews_data_copy = reviews_data.copy()
     product_data_copy = product_data_copy.drop(columns=["product_name", "brand_id"])
-    reviews_data_copy = reviews_data_copy.drop(columns=["author_id", "review_text", "review_title", "product_name"])
+    reviews_data_copy = reviews_data_copy.drop(columns=["author_id", "review_text", "review_title", "product_name", "submission_time"])
 
     product_data_copy.to_csv("dataset/product_drop.csv", index=False)
     reviews_data_copy.to_csv("dataset/reviews_drop.csv", index=False)

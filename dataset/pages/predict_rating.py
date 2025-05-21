@@ -25,7 +25,7 @@ def show_prediction():
     df = pd.merge(df_reviews, df_products, on="product_id", suffixes=("_review", "_product"))
 
     target = "rating_review"
-    exclude = ["product_id", "submission_time", target]
+    exclude = ["product_id", target]
 
     X = df.drop(columns=exclude, errors="ignore")
     y = df[target]

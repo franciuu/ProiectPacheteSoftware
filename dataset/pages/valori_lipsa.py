@@ -11,8 +11,7 @@ def show_procesare():
         return product_data, reviews_data
 
     product_data, reviews_data = process_dataset()
-    st.markdown('<h1 class="main-title">Procesarea Datelor</h1>', unsafe_allow_html=True)
-    st.markdown('<h3 class="main-title">Tratarea valorilor lipsă</h3>', unsafe_allow_html=True)
+    st.markdown('<h1 class="main-title">Tratarea valorilor lipsă</h1>', unsafe_allow_html=True)
 
     col3, col4 = st.columns(2)
     with col3:

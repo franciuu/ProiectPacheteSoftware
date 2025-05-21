@@ -1,224 +1,182 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 def show_explorare():
     @st.cache_data
     def load_data():
-        df_reviews = pd.read_csv("dataset/reviews_nan.csv")
-        df_products = pd.read_csv("dataset/product_nan.csv")
-        return df_reviews, df_products
+        df_products = pd.read_csv("dataset/product.csv")
+        df_reviews = pd.read_csv("dataset/reviews.csv")
+        return df_products, df_reviews
 
-    df_reviews, df_products = load_data()
+    df_products, df_reviews = load_data()
 
-    st.markdown('<h1 class="main-title">Explorarea și Înțelegerea Setului de Date</h1>', unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+        .main-title {font-size: 2.8rem !important; color: #4F8BF9; font-weight: bold;}
+        .stSelectbox label {font-weight: 600;}
+        .stCodeBlock {background: #f5f7fa;}
+        </style>
+    """, unsafe_allow_html=True)
 
-    st.subheader("Vizualizare relațiilor dintre variabilele numerice (Pairplot)")
-    numeric_cols = df_reviews.select_dtypes(include=['number']).dropna(axis=1)
-    fig = sns.pairplot(numeric_cols)
-    st.pyplot(fig)
+    st.markdown('<h1 class="main-title">Analiză vizuală și exploratorie pentru produse și recenzii</h1>',
+                unsafe_allow_html=True)
+    st.write(
+        "Acest dashboard interactiv permite explorarea rapidă a datelor despre produse și recenzii. Selectează o analiză din listă pentru a vedea rezultatele.")
 
-    numeric_cols = df_products.select_dtypes(include=['number']).dropna(axis=1)
-    fig = sns.pairplot(numeric_cols)
-    st.pyplot(fig)
-
-    st.write("""
-        Pentru a înțelege mai bine datele noastre, vom analiza diferite aspecte, de la dimensiune și statistici descriptive, până la distribuția valorilor.
-        Apasă pe butonul de sub fiecare secțiune pentru a vedea rezultatele explorării.
-        """)
-
-    def show_analysis(title, description, code, func):
-        st.markdown(f"### {title}")
-        st.write(description)
-        st.code(code, language="python")
-        if st.button(f"Execută analiza: {title}"):
-            func()
-
-    # **Număr de rânduri și coloane**
-    show_analysis(
-        "Dimensiunea datasetului",
-        "Verificăm numărul total de rânduri și coloane din fiecare dataset.",
-        "df_reviews.shape, df_products.shape",
-        lambda: st.write(
-            f"📊 `reviews_nan.csv`: {df_reviews.shape} rânduri și coloane, `product_nan.csv`: {df_products.shape}")
-    )
-
-    #  **Statistici descriptive**
-    show_analysis(
-        "Statistici descriptive pentru variabile numerice",
-        "Calculăm statistici precum media, devierea standard, min/max și percentila 25/50/75 pentru fiecare variabilă numerică.",
-        "df_reviews.describe(), df_products.describe()",
-        lambda: st.write(df_reviews.describe(), df_products.describe())
-    )
-
-    # **Numărul de valori unice**
-    show_analysis(
-        "Numărul de valori unice per coloană",
-        "Vedem câte valori unice există în fiecare coloană.",
-        "df_reviews.nunique(), df_products.nunique()",
-        lambda: st.write(df_reviews.nunique(), df_products.nunique())
-    )
-
-    # **Distribuția variabilelor categorice**
-    show_analysis(
-        "Distribuția variabilelor categorice",
-        "Numărăm de câte ori apare fiecare valoare într-o coloană categorică.",
-        "df_reviews['product_id'].value_counts(), df_products['brand_name'].value_counts()",
-        lambda: st.write(df_reviews['product_id'].value_counts().head(10),
-                         df_products['brand_name'].value_counts().head(10))
-    )
-
-    # **Analiza corelației între variabilele numerice**
-    show_analysis(
-        "Corelația între variabile numerice",
-        "Calculăm coeficientul de corelație Pearson pentru a vedea relațiile dintre variabilele numerice.",
-        "df_reviews.corr(), df_products.corr()",
-        lambda: (
-            plt.figure(figsize=(10, 5)),
-            sns.heatmap(df_reviews.select_dtypes(include=['number']).corr(), annot=True, cmap="coolwarm"),
-            st.pyplot(plt)
-        )
-    )
-
-    # **Cele mai frecvente valori**
-    show_analysis(
-        "Cele mai frecvente valori dintr-o coloană",
-        "Aflăm cele mai frecvente valori din coloanele `product_id` și `brand_name`.",
-        "df_reviews['product_id'].value_counts(), df_products['brand_name'].value_counts()",
-        lambda: st.write(df_reviews['product_id'].value_counts().head(10),
-                         df_products['brand_name'].value_counts().head(10))
-    )
-
-    # **Compararea valorilor minime și maxime**
-    show_analysis(
-        "Valorile minime și maxime pentru variabile numerice",
-        "Identificăm valorile extreme din fiecare coloană numerică.",
-        "df_reviews.min(), df_reviews.max(), df_products.min(), df_products.max()",
-        lambda: st.write(df_reviews.min(), df_reviews.max(), df_products.min(), df_products.max())
-    )
-
-    # **Distribuția unui subset de date**
-    show_analysis(
-        "Distribuția ratingurilor produselor",
-        "Creăm un histogramă pentru distribuția ratingurilor.",
-        "df_reviews['rating'].hist(bins=20)",
-        lambda: (df_reviews['rating'].hist(bins=20), st.pyplot(plt))
-    )
-
-    # **Relația între două variabile numerice**
-    show_analysis(
-        "Corelația între `rating` și `helpfulness`",
-        "Verificăm dacă recenziile cu rating mare sunt și considerate utile.",
-        "df_reviews[['rating', 'helpfulness']].corr()",
-        lambda: st.write(df_reviews[['rating', 'helpfulness']].corr())
-    )
-
-    #  **Identificarea produselor cele mai apreciate și cele mai criticate**
-    show_analysis(
-        "Cele mai apreciate și cele mai criticate produse",
-        "Identificăm produsele cu cele mai mari și cele mai mici scoruri medii.",
-        """
-        best_products = df_reviews.groupby('product_id')['rating'].mean().sort_values(ascending=False).head(10)
-        worst_products = df_reviews.groupby('product_id')['rating'].mean().sort_values().head(10)
-        """,
-        lambda: st.write(
-            "⭐ **Produsele cu cele mai mari ratinguri:**",
-            df_reviews.groupby('product_id')['rating'].mean().sort_values(ascending=False).head(10),
-            "❌ **Produsele cu cele mai mici ratinguri:**",
-            df_reviews.groupby('product_id')['rating'].mean().sort_values().head(10)
-        )
-    )
-
-    st.title("📊 Analiza Avansată a Datelor: Grupări și Agregări")
-
-    st.write("""
-        În această secțiune, explorăm datele folosind **grupări**, **agregări**, **filtrări cu `.loc` și `.iloc`**, 
-        precum și alte funcții avansate pentru extragerea insight-urilor relevante din date.
-
-        Selectează o analiză și apasă butonul pentru a vizualiza rezultatele!
-        """)
-
-    # Definirea exercițiilor
     exercitii = {
-        "1️⃣ Media ratingurilor pentru fiecare produs": {
-            "descriere": "Calculăm media ratingurilor pentru fiecare produs și sortăm descrescător.",
-            "cod": "df_reviews.groupby('product_id')['rating'].mean().sort_values(ascending=False)"
+        "1️⃣ Afișează primele 5 rânduri din fiecare set de date": {
+            "descriere": "Primele 5 rânduri din `product.csv` și `reviews.csv`.",
+            "explicatie": "Această analiză te ajută să vezi structura și primele valori din fiecare set de date.",
+            "cod": "df_products.head(), df_reviews.head()"
         },
-        "2️⃣ Numărul total de recenzii per produs": {
-            "descriere": "Numărăm câte recenzii are fiecare produs în datasetul de recenzii.",
+        "2️⃣ Valorile unice din coloana brand_name (product.csv)": {
+            "descriere": "Toate brandurile distincte din lista de produse.",
+            "explicatie": "Poți vedea ce branduri există în portofoliul de produse.",
+            "cod": "df_products['brand_name'].unique()"
+        },
+        "3️⃣ Prețul mediu al produselor (product.csv)": {
+            "descriere": "Calculul prețului mediu pentru toate produsele.",
+            "explicatie": "Prețul mediu oferă o idee despre poziționarea generală a produselor.",
+            "cod": "df_products['price_usd'].mean()"
+        },
+        "4️⃣ Numărul de produse limited edition": {
+            "descriere": "Numărul de produse marcate ca ediție limitată.",
+            "explicatie": "Află câte produse speciale (ediție limitată) există în ofertă.",
+            "cod": "df_products[df_products['limited_edition'] == 1].shape[0]"
+        },
+        "5️⃣ Produse din categoria Skincare (nume și preț)": {
+            "descriere": "Lista produselor din categoria principală Skincare cu nume și preț.",
+            "explicatie": "Filtrarea pe o categorie populară pentru a vedea oferta și prețurile.",
+            "cod": "df_products[df_products['primary_category'] == 'Skincare'][['product_name', 'price_usd']]"
+        },
+        "6️⃣ Produsul cu cel mai mare preț": {
+            "descriere": "Produsul cu prețul maxim.",
+            "explicatie": "Identifici produsul premium din ofertă.",
+            "cod": "df_products.loc[df_products['price_usd'].idxmax()][['product_name', 'price_usd']]"
+        },
+        "7️⃣ Prețul mediu pe categorie principală": {
+            "descriere": "Prețul mediu al produselor pentru fiecare categorie principală.",
+            "explicatie": "Compari categoriile după prețul mediu al produselor.",
+            "cod": "df_products.groupby('primary_category')['price_usd'].mean()"
+        },
+        "8️⃣ Recenzii cu rating 5 pentru produsul P420652": {
+            "descriere": "Toate recenziile cu rating maxim pentru produsul cu ID-ul P420652.",
+            "explicatie": "Analizezi feedback-ul excelent pentru un anumit produs.",
+            "cod": "df_reviews[(df_reviews['product_id'] == 'P420652') & (df_reviews['rating'] == 5)]"
+        },
+        "9️⃣ Scorul mediu de rating pentru fiecare brand": {
+            "descriere": "Ratingul mediu pentru fiecare brand, pe baza recenziilor.",
+            "explicatie": "Află ce branduri au cele mai bune recenzii din partea clienților.",
+            "cod": "df_reviews.groupby('brand_name')['rating'].mean()"
+        },
+        "🔟 Top 3 produse cu cele mai multe recenzii pozitive": {
+            "descriere": "Top 3 produse cu cele mai multe recenzii pozitive (total_pos_feedback_count).",
+            "explicatie": "Identifici produsele cu cel mai mult feedback pozitiv.",
+            "cod": "df_reviews.groupby('product_id')['total_pos_feedback_count'].sum().sort_values(ascending=False).head(3)"
+        },
+        "1️⃣1️⃣ Histograma distribuției prețurilor": {
+            "descriere": "Histograma distribuției prețurilor produselor.",
+            "explicatie": "Vizualizezi cum sunt distribuite prețurile produselor.",
+            "cod": "plt.figure(figsize=(8,4)); plt.hist(df_products['price_usd'], bins=20, color='#4F8BF9', edgecolor='white'); plt.xlabel('Preț (USD)'); plt.ylabel('Frecvență'); plt.title('Distribuția prețurilor'); st.pyplot(plt.gcf())"
+        },
+        "1️⃣2️⃣ Grafic de bare: preț mediu pe brand (top 10)": {
+            "descriere": "Grafic de bare cu prețul mediu pentru top 10 branduri cu cele mai multe produse.",
+            "explicatie": "Compari vizual brandurile cu cele mai multe produse după prețul mediu.",
+            "cod": """
+top_brands = df_products['brand_name'].value_counts().head(10).index
+avg_price = df_products[df_products['brand_name'].isin(top_brands)].groupby('brand_name')['price_usd'].mean().sort_values(ascending=False)
+plt.figure(figsize=(10,4))
+avg_price.plot(kind='bar', color='#F97B4F', edgecolor='black')
+plt.ylabel('Preț mediu (USD)')
+plt.title('Preț mediu pe brand (top 10)')
+plt.xticks(rotation=30)
+st.pyplot(plt.gcf())
+"""
+        },
+        "1️⃣3️⃣ Mediana prețurilor pe fiecare categorie principală": {
+            "descriere": "Calculează mediana prețurilor pentru fiecare categorie principală.",
+            "explicatie": "Mediana este mai robustă la extreme decât media și arată prețul tipic din fiecare categorie.",
+            "cod": "df_products.groupby('primary_category')['price_usd'].median()"
+        },
+        "1️⃣4️⃣ Numărul de recenzii pentru fiecare produs": {
+            "descriere": "Afișează câte recenzii are fiecare produs.",
+            "explicatie": "Poți vedea ce produse sunt cele mai populare sau cele mai discutate.",
             "cod": "df_reviews['product_id'].value_counts()"
         },
-        "3️⃣ Produsele cu cele mai multe aprecieri (loves_count)": {
-            "descriere": "Selectăm primele 10 produse cu cel mai mare număr de aprecieri.",
-            "cod": "df_products[['product_id', 'loves_count']].nlargest(10, 'loves_count')"
+        "1️⃣5️⃣ Ratingul maxim și minim pentru fiecare brand": {
+            "descriere": "Afișează ratingul maxim și minim primit de fiecare brand.",
+            "explicatie": "Astfel vezi variația percepției clienților pentru fiecare brand.",
+            "cod": "df_reviews.groupby('brand_name')['rating'].agg(['min', 'max'])"
         },
-        "4️⃣ Produsele cu prețul maxim per categorie": {
-            "descriere": "Identificăm produsul cu cel mai mare preț pentru fiecare categorie primară.",
-            "cod": "df_products.loc[df_products.groupby('primary_category')['price_usd'].idxmax(), ['primary_category', 'product_id', 'price_usd']]"
-        },
-        "5️⃣ Distribuția prețurilor pe categorii de produse": {
-            "descriere": "Calculăm statistici descriptive ale prețurilor pentru fiecare categorie.",
-            "cod": "df_products.groupby('primary_category')['price_usd'].describe()"
-        },
-        "6️⃣ Cele mai utile recenzii (helpfulness maxim)": {
-            "descriere": "Afișăm primele 5 recenzii considerate cele mai utile.",
-            "cod": "df_reviews.nlargest(5, 'helpfulness')[['product_id', 'helpfulness']]"
-        },
-        "7️⃣ Produsele cu cele mai multe variații (child_count)": {
-            "descriere": "Afișăm primele 10 produse cu cele mai multe variații disponibile.",
-            "cod": "df_products[['product_id', 'child_count']].nlargest(10, 'child_count')"
-        },
-        "8️⃣ Produsele exclusiv online cu cel mai mare rating": {
-            "descriere": "Selectăm produsele exclusiv online cu cele mai mari ratinguri medii.",
-            "cod": "df_products[df_products['online_only'] == 1].groupby('product_id').agg(avg_rating=('rating', 'mean')).sort_values(by='avg_rating', ascending=False)"
-        },
-        "9️⃣ Media prețului și numărul de produse per brand": {
-            "descriere": "Calculăm media prețului și numărul total de produse pentru fiecare brand.",
-            "cod": "df_products.groupby('brand_id').agg(avg_price=('price_usd', 'mean'), product_count=('product_id', 'count')).sort_values(by='avg_price', ascending=False)"
-        },
-        "🔟 Categoriile cu cea mai mare variație de preț": {
-            "descriere": "Calculăm variația prețurilor în fiecare categorie.",
-            "cod": """df_products.groupby('primary_category').agg(
-                    price_std=('price_usd', 'std')
-                ).assign(price_range=lambda x: df_products.groupby('primary_category')['price_usd'].max() - df_products.groupby('primary_category')['price_usd'].min())"""
+        "1️⃣6️⃣ Procentul de produse limited edition pe fiecare categorie": {
+            "descriere": "Calculează procentul de produse limited edition pentru fiecare categorie principală.",
+            "explicatie": "Află cât de exclusiviste sunt categoriile de produse.",
+            "cod": """
+limited_pct = df_products.groupby('primary_category')['limited_edition'].mean() * 100
+limited_pct
+"""
         }
     }
 
-    exercitii.update({
-        "1️⃣1️⃣ Produsele cu preț mai mare de 100 USD și exclusiv online": {
-            "descriere": "Selectăm produsele care sunt exclusiv online și costă peste 100 USD.",
-            "cod": """df_products.loc[
-                    (df_products['price_usd'] > 100) & (df_products['online_only'] == 1),
-                    ['product_id', 'price_usd', 'online_only']
-                ]"""
-        },
-        "1️⃣2️⃣ Primele 5 produse după rating și număr de recenzii (iloc)": {
-            "descriere": "Afișăm primele 5 produse sortate descrescător după rating și numărul total de feedback-uri.",
-            "cod": """df_reviews[['product_id', 'rating', 'total_feedback_count']].sort_values(
-                by=['rating', 'total_feedback_count'], ascending=[False, False]
-                ).iloc[:5]
-            """
-        },
-        "1️⃣3️⃣ Toate produsele dintr-o categorie anume (folosind loc)": {
-            "descriere": "Filtrăm produsele dintr-o anumită categorie, de exemplu, 'Skincare'.",
-            "cod": """df_products.loc[df_products['primary_category'] == 'Skincare', 
-                    ['product_id', 'price_usd', 'child_count']]"""
-        },
-        "1️⃣4️⃣ Recenziile de la poziția 100 la 110 (iloc)": {
-            "descriere": "Extragem recenziile dintre pozițiile 100 și 110 din dataset.",
-            "cod": """df_reviews.iloc[100:110, [0, 1, 2, 3, 4]]"""
-        }
-    })
-
-    selected_exercise = st.selectbox("🔍 Selectează o analiză", list(exercitii.keys()))
-
-    st.markdown(f"### 🔹 {selected_exercise}")
-    st.write(exercitii[selected_exercise]["descriere"])
-
-    st.code(exercitii[selected_exercise]["cod"], language='python')
+    selected = st.selectbox("🔍 Selectează o analiză", list(exercitii.keys()))
+    st.markdown(f"#### {selected}")
+    st.write(exercitii[selected]["descriere"])
+    st.info(exercitii[selected]["explicatie"])
+    st.code(exercitii[selected]["cod"], language="python")
 
     if st.button("🔎 Execută analiza"):
-        result = eval(exercitii[selected_exercise]["cod"])
-        st.write("### 📊 Rezultate:")
-        st.write(result)
+        if selected == "1️⃣ Afișează primele 5 rânduri din fiecare set de date":
+            st.write("**product.csv:**")
+            st.write(df_products.head())
+            st.write("**reviews.csv:**")
+            st.write(df_reviews.head())
+        elif selected == "2️⃣ Valorile unice din coloana brand_name (product.csv)":
+            st.write(df_products['brand_name'].unique())
+        elif selected == "3️⃣ Prețul mediu al produselor (product.csv)":
+            st.write(f"Prețul mediu: {df_products['price_usd'].mean():.2f} USD")
+        elif selected == "4️⃣ Numărul de produse limited edition":
+            st.write(f"Număr produse limited edition: {df_products[df_products['limited_edition'] == 1].shape[0]}")
+        elif selected == "5️⃣ Produse din categoria Skincare (nume și preț)":
+            st.dataframe(df_products[df_products['primary_category'] == 'Skincare'][['product_name', 'price_usd']])
+        elif selected == "6️⃣ Produsul cu cel mai mare preț":
+            max_row = df_products.loc[df_products['price_usd'].idxmax()]
+            st.write(f"Produs: {max_row['product_name']}, Preț: {max_row['price_usd']:.2f} USD")
+        elif selected == "7️⃣ Prețul mediu pe categorie principală":
+            st.dataframe(df_products.groupby('primary_category')['price_usd'].mean().reset_index())
+        elif selected == "8️⃣ Recenzii cu rating 5 pentru produsul P420652":
+            st.dataframe(df_reviews[(df_reviews['product_id'] == 'P420652') & (df_reviews['rating'] == 5)])
+        elif selected == "9️⃣ Scorul mediu de rating pentru fiecare brand":
+            st.dataframe(df_reviews.groupby('brand_name')['rating'].mean().reset_index())
+        elif selected == "🔟 Top 3 produse cu cele mai multe recenzii pozitive":
+            st.dataframe(
+                df_reviews.groupby('product_id')['total_pos_feedback_count'].sum().sort_values(ascending=False).head(
+                    3).reset_index())
+        elif selected == "️1️⃣1️⃣ Histograma distribuției prețurilor":
+            plt.figure(figsize=(8, 4))
+            plt.hist(df_products['price_usd'], bins=20, color='#4F8BF9', edgecolor='white')
+            plt.xlabel('Preț (USD)')
+            plt.ylabel('Frecvență')
+            plt.title('Distribuția prețurilor')
+            st.pyplot(plt.gcf())
+            plt.clf()
+        elif selected == "1️⃣2️⃣ Grafic de bare: preț mediu pe brand (top 10)":
+            top_brands = df_products['brand_name'].value_counts().head(10).index
+            avg_price = df_products[df_products['brand_name'].isin(top_brands)].groupby('brand_name')[
+                'price_usd'].mean().sort_values(ascending=False)
+            plt.figure(figsize=(10, 4))
+            avg_price.plot(kind='bar', color='#F97B4F', edgecolor='black')
+            plt.ylabel('Preț mediu (USD)')
+            plt.title('Preț mediu pe brand (top 10)')
+            plt.xticks(rotation=30)
+            st.pyplot(plt.gcf())
+            plt.clf()
+        elif selected == "1️⃣3️⃣ Mediana prețurilor pe fiecare categorie principală":
+            st.dataframe(df_products.groupby('primary_category')['price_usd'].median().reset_index())
+        elif selected == "1️⃣4️⃣ Numărul de recenzii pentru fiecare produs":
+            st.dataframe(df_reviews['product_id'].value_counts().reset_index().rename(columns={'index': 'product_id', 'product_id': 'nr_recenzii'}))
+        elif selected == "1️⃣5️⃣ Ratingul maxim și minim pentru fiecare brand":
+            st.dataframe(df_reviews.groupby('brand_name')['rating'].agg(['min', 'max']).reset_index())
+        elif selected == "1️⃣6️⃣ Procentul de produse limited edition pe fiecare categorie":
+            limited_pct = df_products.groupby('primary_category')['limited_edition'].mean() * 100
+            st.dataframe(limited_pct.reset_index().rename(columns={'limited_edition': 'procent_limited_edition'}))

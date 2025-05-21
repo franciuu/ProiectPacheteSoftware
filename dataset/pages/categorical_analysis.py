@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import re
 from sklearn.preprocessing import LabelEncoder, MultiLabelBinarizer
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -34,10 +33,16 @@ def show_categorical_analysis():
     - Atribuie un număr întreg fiecărei clase unice.
     - Nu presupune vreo ordine între valori.
     """)
+    st.write("**Valorile originale:**")
+    st.dataframe(df[['brand_name']].head())
+
+    # Label Encoding
     le_brand = LabelEncoder()
     df['brand_name'] = le_brand.fit_transform(df['brand_name'])
 
-    st.write(df[['brand_name']].head())
+    # Afișează valorile codificate, alături de cele originale
+    st.write("**Valorile după Label Encoding:**")
+    st.dataframe(df[['brand_name']].head())
 
     # 2. INGREDIENTS - TF-IDF
     st.subheader("🔹 `ingredients` — TF-IDF Vectorization (Top 10)")
@@ -133,9 +138,7 @@ def show_categorical_analysis():
 
     st.dataframe(ohe_df.head())
 
-    # 5. Salvare finală
     df.to_csv("dataset/products_encoded.csv", index=False)
-    st.success("✅ Fișierul `products_encoded.csv` a fost salvat cu succes!")
 
     st.title("📋 Analiza Variabilelor Categoriale din `reviews.csv`")
 
@@ -196,8 +199,5 @@ def show_categorical_analysis():
     df = pd.concat([df.drop(columns=['hair_color']), hair_df], axis=1)
     st.dataframe(hair_df.head())
 
-    # --- Salvare ---
-    st.subheader("📁 Salvare fișier encodat")
     df.to_csv("dataset/reviews_encoded.csv", index=False)
-    st.success("✅ Fișierul `reviews_encoded.csv` a fost salvat cu succes.")
 
