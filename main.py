@@ -45,7 +45,7 @@ with st.sidebar:
 
     st.markdown("---")
 
-    option_1 = st.radio("📌 Alege o secțiune:", ["Home", "Dataset", "Explorarea și Înțelegerea Setului de Date", "Tratarea valorilor lipsa", "Tratarea Outliers", "Analiză corelații", "Variabile Categoriale", "Standardizare si normalizare", "Predicție", "Geopandas"], index=0)
+    option_1 = st.radio("📌 Alege o secțiune:", ["Home", "Dataset", "Explorarea și Înțelegerea Setului de Date", "Tratarea valorilor lipsa", "Analiza distributii si pairplot", "Tratarea Outliers", "Analiză corelații", "Variabile Categoriale", "Standardizare si normalizare", "Predicție", "Geopandas"], index=0)
 
 section = option_1
 
@@ -61,6 +61,10 @@ elif section == "Tratarea valorilor lipsa":
     from dataset.pages.valori_lipsa import show_procesare
     show_procesare()
 
+elif section == "Analiza distributii si pairplot":
+    from dataset.pages.distributii_pairplot import show_analiza
+    show_analiza()
+
 if section == "Tratarea Outliers":
     from dataset.pages.outliers import show_outliers
     show_outliers()
@@ -74,7 +78,7 @@ elif section == "Analiză corelații":
     show_correlations()
 
 elif section == "Predicție":
-    from dataset.pages.predict_rating import show_prediction
+    from dataset.pages.predict import show_prediction
     show_prediction()
 
 elif section == "Variabile Categoriale":

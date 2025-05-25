@@ -142,6 +142,7 @@ def show_outliers():
 
         #### 🛍️ **Concluzie:**
         Cele mai multe recenzii nu sunt votate deloc sau nu sunt considerate utile. Doar un număr mic de recenzii ating scoruri mari de „helpfulness”, iar acestea sunt probabil cele mai detaliate sau bine argumentate.
+        
         ---
 
         ### 📌 `total_feedback_count` - Numărul total de voturi pe recenzie

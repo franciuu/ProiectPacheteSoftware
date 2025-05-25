@@ -60,10 +60,10 @@ def show_correlations():
 
             st.markdown("""
             **📌 Interpretare:**
-            - `rating` și `is_recommended` sunt **puternic corelate** (**0.82**) – recenziile bune duc la recomandări.
-            - `positive_ratio` are **corelație pozitivă moderată** cu `helpfulness` și `rating` – un semnal clar că reacțiile pozitive indică satisfacție.
-            - `helpfulness` are o **corelație negativă puternică** cu feedbackul negativ – review-urile slabe sunt considerate mai puțin utile.
-            - `price_usd` rămâne **necorelat** – prețul nu influențează calitatea sau aprecierea recenziei.
+            - `helpfulness` și `positive_ratio` (0.94): Există o corelație foarte puternică între cât de utile sunt considerate recenziile și proporția recenziilor pozitive. Cu alte cuvinte, recenziile considerate utile tind să fie și pozitive.
+            - `rating` și `is_recommended` (0.82): Rating-ul oferit și recomandarea produsului sunt strâns legate. Un rating mai mare este asociat cu o probabilitate mai mare ca produsul să fie recomandat.
+            - `total_feedback_count`: Are corelații foarte slabe sau chiar negative cu celelalte variabile, cea mai mare fiind -0.14 cu positive_ratio. Asta sugerează că numărul total de feedback-uri nu este legat semnificativ de calitatea sau tonul recenziilor.
+            - `price_usd`: Prețul produsului nu are o corelație semnificativă cu nicio altă variabilă (toate valorile sunt apropiate de 0), deci prețul nu influențează direct rating-ul, recomandarea sau utilitatea recenziilor.
             """)
         else:
             st.warning("Tabelul `df_reviews` nu conține suficiente coloane numerice.")
@@ -84,10 +84,11 @@ def show_correlations():
 
             st.markdown("""
             **📌 Interpretare:**
-            - `loves_count` are **corelație moderată pozitivă** cu `child_count` (**0.41**) – produsele cu mai multe variante sunt mai apreciate.
-            - `loves_count` are **corelație slab negativă** cu `new` (**-0.29**) și `online_only` (**-0.35**) – produsele noi sau doar online par mai puțin populare.
+            - `loves_count` și `child_count` (0.41): Produsele cu mai multe variante (child_count mai mare) tind să aibă și mai multe „loves” din partea utilizatorilor.
+            - `limited_edition` și `out_of_stock` (0.17): Produsele ediție limitată tind să fie mai des epuizate din stoc.
+            - `loves_count` și `online_only` (-0.35): Produsele disponibile exclusiv online primesc mai puține „loves” din partea utilizatorilor.
             - `rating` nu este influențat semnificativ de alte variabile – deci reflectă evaluarea directă, nu caracteristici ale produsului.
-            - `price_usd` este **aproape independent** – nu influențează popularitatea sau scorul produselor.
+            - `price_usd` este slab corelat cu celelalte variabile, cea mai mare corelație fiind cu online_only (-0.16), ceea ce sugerează că prețul nu influențează semnificativ celelalte caracteristici analizate.
             """)
         else:
             st.warning("Tabelul `df_products` nu conține suficiente coloane numerice.")
