@@ -6,6 +6,7 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 import xgboost as xgb
+import statsmodels.api as sm
 
 def show_prediction():
     st.markdown('<h1 style="color:#6C3483;">Analiză predictivă și exploratorie pe două seturi de date cosmetice</h1>',
@@ -20,7 +21,7 @@ def show_prediction():
     st.markdown("""
     **Scop:**  
     Să prezicem ratingul unei recenzii folosind caracteristicile disponibile în fișierul.  
-    Vom construi un model de regresie liniară, îl vom evalua și vom interpreta rezultatele.
+    Vom construi un model de regresie liniară, îl vom evalua pe setul de test și vom interpreta rezultatele.
     """)
 
     df_reviews = pd.read_csv("dataset/reviews_sn.csv")
@@ -35,33 +36,74 @@ def show_prediction():
     model.fit(Xr_train, y_train)
     y_pred = model.predict(Xr_test)
 
+    Xr_train_sm = sm.add_constant(Xr_train)
+    sm_model = sm.OLS(y_train, Xr_train_sm).fit()
+
+    Xr_test_sm = sm.add_constant(Xr_test)
+    Xr_test_sm = Xr_test_sm.reindex(columns=Xr_train_sm.columns, fill_value=0)
+    y_pred_sm = sm_model.predict(Xr_test_sm)
+    r2_sm_test = r2_score(y_test, y_pred_sm)
+
+    st.markdown("#### Toate rezultatele de mai jos sunt calculate pe **setul de test** (date nevăzute la antrenare) pentru o evaluare obiectivă a performanței.")
+
+    st.subheader("📈 Analiză statistică detaliată cu statsmodels (antrenat pe train, evaluat pe test)")
+    st.markdown("""
+    Rezumatul de mai jos oferă informații detaliate despre coeficienții modelului (antrenați pe train), semnificația statistică a fiecărei variabile, intervale de încredere și diagnostice de model.
+    """)
+    st.text(sm_model.summary())
+
+    st.markdown(f"""
+**🧮 Explicație R²:**  
+- **R² afișat în summary (0.692):** Este calculat pe setul de antrenament și arată cât de bine se potrivește modelul pe datele pe care a fost antrenat.  
+- **R² calculat cu coeficienții statsmodels pe setul de test:** `{r2_sm_test:.4f}`  
+  Acesta reflectă acuratețea reală pe date nevăzute (test), fiind o estimare mai realistă a performanței modelului în practică.
+
+**De ce pot exista diferențe mici între R² din statsmodels și scikit-learn?**  
+- statsmodels și scikit-learn folosesc formule aproape identice pentru R², dar pot apărea diferențe minore din cauza modului de tratare a interceptului și a preciziei numerice.
+- R² din statsmodels summary este pe train, iar R² din scikit-learn este pe test. Pentru comparație corectă, folosește mereu R² pe test.
+
+**Interpretare OLS Regression Results:**  
+- **R-squared:** 0.692 → Modelul explică 69.2% din variația ratingurilor din setul de antrenament.
+- **Adj. R-squared:** 0.691 → Corectat pentru numărul de variabile, penalizează adăugarea de predictori irelevanți.
+- **F-statistic:** 469.8 (p=0.00) → Modelul este semnificativ statistic (cel puțin o variabilă explică ratingul).
+- **Coeficienți:**  
+    - Fiecare coeficient arată cu cât se modifică ratingul la o unitate creștere a variabilei respective, restul constant.
+    - P-value < 0.05 (ex: `is_recommended`, `helpfulness`) înseamnă efect semnificativ statistic.
+    - Intervalele [0.025, 0.975] arată limitele între care se află coeficientul cu 95% probabilitate.
+- **Diagnostică model:**  
+    - **Durbin-Watson:** 2.028 → Nu există autocorelație a erorilor.
+    - **Jarque-Bera:** 6265.267 (p=0.00) → Reziduurile nu sunt distribuite normal, dar la seturi mari acest lucru e comun.
+    - **Cond. No.:** 5.63e+15 → Posibilă multicoliniaritate (corelații între predictori).
+
+> **Pe scurt:**  
+> - R² pe test este cel mai relevant pentru performanța reală.
+> - Coeficienții semnificativi statistic pot fi interpretați ca factori determinanți ai ratingului.
+> - Modelul explică o proporție mare din variație, dar nu totul (există factori subiectivi sau neliniați).
+    """)
+
     mae = mean_absolute_error(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
 
-    st.subheader("📊 Rezultatele modelului Linear Regression")
+    st.subheader("📊 Rezultatele modelului Linear Regression (scikit-learn, pe test)")
     col1, col2, col3 = st.columns(3)
     col1.metric("MAE", f"{mae:.4f}")
     col2.metric("MSE", f"{mse:.4f}")
     col3.metric("R²", f"{r2:.4f}")
 
     st.markdown("""
-    **Interpretare:**
-    - **MAE (Eroare Absolută Medie)**  
-        Această valoare ne arată, în medie, cu cât diferă predicțiile modelului față de valorile reale ale ratingului.  
-        - O valoare de 0.4310 înseamnă că, în medie, modelul greșește cu aproximativ 0.43 puncte la fiecare predicție de rating (pe o scară de la 1 la 5, de exemplu, această eroare este destul de mică).
-        - Un MAE mai mic indică o precizie mai bună.
-    - **MSE (Eroare Medie Pătratică)**  
-        MSE penalizează mai puternic erorile mari, fiind sensibil la predicțiile foarte greșite.
-        - O valoare de 0.3317 sugerează că variația pătratică dintre valorile reale și cele prezise este redusă.
-        - Cu cât MSE este mai mic, cu atât modelul este mai robust la erori mari.
-    - **R² (Coeficient de determinare)**  
-        R² măsoară proporția din variația ratingului real care este explicată de model.
-        - Un scor de 0.6742 înseamnă că aproximativ 67% din variația ratingurilor din setul de test este explicată de modelul nostru.
-        - Un R² apropiat de 1 indică un model foarte bun, în timp ce valori apropiate de 0 arată că modelul nu explică bine datele.
-    > Un R² de 0.67 arată că două treimi din variația ratingurilor poate fi explicată de datele de intrare, ceea ce este un rezultat solid pentru un model liniar, mai ales într-un domeniu cu factori subiectivi ca evaluarea produselor cosmetice.
-    > Erorile (MAE și MSE) sunt relativ mici, ceea ce sugerează că, pentru majoritatea recenziilor, predicțiile sunt apropiate de realitate.  
-    > Totuși, există încă o treime din variație care nu este explicată, ceea ce poate fi cauzat de factori subiectivi, variabile lipsă sau relații neliniare pe care acest model nu le poate surprinde.
+    ### 🔎 Interpretare rezultate
+
+    - **MAE (Eroare Absolută Medie):**  
+      Modelul greșește, în medie, cu aproximativ 0.43 puncte la fiecare predicție de rating. 
+
+    - **MSE (Eroare Medie Pătratică):**  
+      Erorile mai mari sunt penalizate suplimentar, iar valoarea de 0.3317 arată că modelul nu face predicții foarte greșite. Un MSE mai mic reflectă robustețea modelului la erori mari.
+
+    - **R² (Coeficient de determinare):**  
+      Aproximativ 67% din variația ratingurilor reale este explicată de model pe setul de test. Aceasta înseamnă că modelul surprinde bine relația dintre caracteristici și rating, dar există încă factori suplimentari care nu sunt incluși în model.
+
+    > Toate aceste valori sunt calculate pe setul de test (date nevăzute de model la antrenare), deci oferă o imagine realistă asupra performanței modelului în practică.
     """)
 
     st.header("2️⃣ Predicție preț produs cu Random Forest și XGBoost")
@@ -80,12 +122,10 @@ def show_prediction():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Random Forest
     rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
     rf_model.fit(X_train, y_train)
     rf_pred = rf_model.predict(X_test)
 
-    # XGBoost
     xgb_model = xgb.XGBRegressor(n_estimators=100, random_state=42)
     xgb_model.fit(X_train, y_train)
     xgb_pred = xgb_model.predict(X_test)
@@ -97,7 +137,7 @@ def show_prediction():
     xgb_mse = mean_squared_error(y_test, xgb_pred)
     xgb_r2 = r2_score(y_test, xgb_pred)
 
-    st.subheader("📊 Rezultate Random Forest vs XGBoost")
+    st.subheader("📊 Rezultate Random Forest vs XGBoost (toate pe setul de test)")
     results = pd.DataFrame({
         "Model": ["Random Forest", "XGBoost"],
         "MAE": [rf_mae, xgb_mae],
@@ -122,4 +162,3 @@ def show_prediction():
         > Ambele modele oferă performanțe similare, cu un ușor avantaj pentru Random Forest la toate cele trei metrici. Niciun model nu depășește clar celălalt, astfel încât alegerea finală poate depinde de alte criterii (timp de antrenare, interpretabilitate sau preferințe de implementare).  
         > Pentru o acuratețe și mai mare, se pot încerca optimizări suplimentare sau inginerie de caracteristici.
        """)
-
