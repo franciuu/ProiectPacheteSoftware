@@ -76,7 +76,7 @@ def show_categorical_analysis():
     tfidf = TfidfVectorizer(max_features=10)
     tfidf_matrix = tfidf.fit_transform(df['ingredients'])
     tfidf_df = pd.DataFrame(tfidf_matrix.toarray(), columns=[f"ing_{col}" for col in tfidf.get_feature_names_out()])
-    df = df.drop(columns=['ingredients'])  # eliminăm coloana originală
+    df = df.drop(columns=['ingredients'])
     df = pd.concat([df, tfidf_df], axis=1)
 
     st.dataframe(tfidf_df.head())
